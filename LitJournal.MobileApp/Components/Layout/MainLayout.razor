@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <main>
+        <div class="upper-bar">
+            <UpperMenu 
+            ShowSearchButton="true"
+            ShowNotificationButton="true"
+            ShowAddButton="true"
+            NotificationCount="3"/>
+        </div>
+
+        <article>
+            @Body
+        </article>
+
+        <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+    </main>
+
+    <div class="bottom-bar">
+        <NavMenu />
+    </div>
+</div>

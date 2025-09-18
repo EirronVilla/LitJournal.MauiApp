@@ -1,0 +1,105 @@
+﻿@namespace LitJournal.MobileApp.Components.Pages.Shared
+@using LitJournal.MobileApp.Models
+
+<div class="trending-section">
+    <div class="section-header">
+        <h2 class="section-title">📈 Trending Books</h2>
+        <button class="see-all-btn" @onclick="OnSeeAllClick">See All</button>
+    </div>
+
+    <div class="carousel-container">
+        <div class="carousel-track" style="transform: translateX(@($"{-currentIndex * cardWidth}px"))">
+            @foreach (var book in TrendingBooks)
+            {
+                <div class="book-card" @onclick="() => OnBookClick.InvokeAsync(book)">
+                    <div class="book-cover">
+                        <img src="@book.CoverUrl" alt="@book.Title" class="cover-image" />
+                        <div class="trending-badge">
+                            <span class="trending-icon">🔥</span>
+                            <span class="trending-text">#@book.TrendingRank</span>
+                        </div>
+                        <div class="rating-overlay">
+                            <span class="rating">⭐ @book.Rating.ToString("0.0")</span>
+                        </div>
+                    </div>
+                    <div class="book-info">
+                        <h3 class="book-title">@book.Title</h3>
+                        <p class="book-author">@book.Author</p>
+                        <div class="book-stats">
+                            <span class="readers-count">@FeedUtilities.FormatCount(book.ReadersCount) readers</span>
+                            <span class="genre">@book.Genre</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Carousel Navigation Dots -->
+    <div class="carousel-dots">
+        @for (int i = 0; i < Math.Ceiling((double)TrendingBooks.Count / itemsPerView); i++)
+        {
+            int index = i;
+            <button class="dot @(currentIndex / itemsPerView == i ? "active" : "")"
+                    @onclick="() => GoToSlide(index)"></button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public List<TrendingBook> TrendingBooks { get; set; } = new();
+    [Parameter] public EventCallback<TrendingBook> OnBookClick { get; set; }
+    [Parameter] public EventCallback OnSeeAllClick { get; set; }
+
+    private int currentIndex = 0;
+    private int itemsPerView = 2;
+    private int cardWidth = 152; // 140px + 12px gap
+
+    protected override void OnInitialized()
+    {
+        // Initialize with sample data if empty
+        if (!TrendingBooks.Any())
+        {
+            TrendingBooks = SampleDataService.GetSampleTrendingBooks();
+        }
+    }
+
+    private void GoToSlide(int slideIndex)
+    {
+        currentIndex = slideIndex * itemsPerView;
+        StateHasChanged();
+    }
+
+    // Touch/swipe support for mobile (basic implementation)
+    private double startX = 0;
+    private bool isDragging = false;
+
+    private void OnTouchStart(TouchEventArgs e)
+    {
+        startX = e.Touches[0].ClientX;
+        isDragging = true;
+    }
+
+    private void OnTouchEnd(TouchEventArgs e)
+    {
+        if (!isDragging) return;
+
+        double endX = e.ChangedTouches[0].ClientX;
+        double diff = startX - endX;
+
+        if (Math.Abs(diff) > 50) // Minimum swipe distance
+        {
+            if (diff > 0 && currentIndex < TrendingBooks.Count - itemsPerView)
+            {
+                currentIndex += itemsPerView;
+            }
+            else if (diff < 0 && currentIndex > 0)
+            {
+                currentIndex -= itemsPerView;
+            }
+            StateHasChanged();
+        }
+
+        isDragging = false;
+    }
+}

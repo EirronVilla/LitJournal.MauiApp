@@ -1,0 +1,147 @@
+﻿<div class="upper-menu">
+    <!-- Logo/Title Section -->
+    <div class="logo-section">
+        @if (ShowBackButton)
+        {
+            <button class="back-button" @onclick="OnBackClick">
+                <svg class="back-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+            </button>
+        }
+
+        @if (!string.IsNullOrEmpty(PageTitle))
+        {
+            <h1 class="page-title">@PageTitle</h1>
+        }
+        else
+        {
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+                <span class="app-name">LitJournal</span>
+            </div>
+        }
+    </div>
+
+    <!-- Action Buttons Section -->
+    <div class="actions-section">
+        @if (ShowSearchButton)
+        {
+            <button class="action-button search-button" @onclick="OnSearchClick">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+            </button>
+        }
+
+        @if (ShowNotificationButton)
+        {
+            <button class="action-button notification-button" @onclick="OnNotificationClick">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                @if (NotificationCount > 0)
+                {
+                    <span class="notification-badge">@(NotificationCount > 99 ? "99+" : NotificationCount.ToString())</span>
+                }
+            </button>
+        }
+
+        @if (ShowMenuButton)
+        {
+            <button class="action-button menu-button" @onclick="OnMenuClick">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none">
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                </svg>
+            </button>
+        }
+
+        @if (ShowAddButton)
+        {
+            <button class="action-button add-button" @onclick="OnAddClick">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+            </button>
+        }
+
+        @if (ShowDirectMessageButton)
+        {
+            <button class="action-button dm-button" @onclick="OnDirectMessageClick">
+                <svg class="action-icon" viewBox="0 0 24 24" fill="none">
+                    <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z" />
+                </svg>
+                @if (UnreadMessages > 0)
+                {
+                    <span class="notification-badge">@(UnreadMessages > 99 ? "99+" : UnreadMessages.ToString())</span>
+                }
+            </button>
+        }
+    </div>
+</div>
+
+@code {
+    // Parameters for customization
+    [Parameter] public string? PageTitle { get; set; }
+    [Parameter] public bool ShowBackButton { get; set; } = false;
+    [Parameter] public bool ShowSearchButton { get; set; } = true;
+    [Parameter] public bool ShowNotificationButton { get; set; } = true;
+    [Parameter] public bool ShowMenuButton { get; set; } = false;
+    [Parameter] public bool ShowAddButton { get; set; } = true;
+    [Parameter] public bool ShowDirectMessageButton { get; set; } = false;
+    [Parameter] public int NotificationCount { get; set; } = 0;
+    [Parameter] public int UnreadMessages { get; set; } = 0;
+
+    // Event callbacks
+    [Parameter] public EventCallback OnBackClick { get; set; }
+    [Parameter] public EventCallback OnSearchClick { get; set; }
+    [Parameter] public EventCallback OnNotificationClick { get; set; }
+    [Parameter] public EventCallback OnMenuClick { get; set; }
+    [Parameter] public EventCallback OnAddClick { get; set; }
+    [Parameter] public EventCallback OnDirectMessageClick { get; set; }
+
+    // Event handlers
+    private async Task HandleBackClick()
+    {
+        if (OnBackClick.HasDelegate)
+            await OnBackClick.InvokeAsync();
+    }
+
+    private async Task HandleSearchClick()
+    {
+        if (OnSearchClick.HasDelegate)
+            await OnSearchClick.InvokeAsync();
+    }
+
+    private async Task HandleNotificationClick()
+    {
+        if (OnNotificationClick.HasDelegate)
+            await OnNotificationClick.InvokeAsync();
+    }
+
+    private async Task HandleMenuClick()
+    {
+        if (OnMenuClick.HasDelegate)
+            await OnMenuClick.InvokeAsync();
+    }
+
+    private async Task HandleAddClick()
+    {
+        if (OnAddClick.HasDelegate)
+            await OnAddClick.InvokeAsync();
+    }
+
+    private async Task HandleDirectMessageClick()
+    {
+        if (OnDirectMessageClick.HasDelegate)
+            await OnDirectMessageClick.InvokeAsync();
+    }
+}

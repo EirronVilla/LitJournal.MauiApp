@@ -1,0 +1,204 @@
+﻿@namespace LitJournal.MobileApp.Components.Pages.Shared
+@using LitJournal.MobileApp.Models
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+
+<div class="activity-feed">
+    <div class="section-header">
+        <h2 class="section-title">📚 Recent Activity</h2>
+        <div class="filter-tabs">
+            <button class="filter-tab @(currentFilter == "all" ? "active" : "")">All</button>
+            <button class="filter-tab @(currentFilter == "following" ? "active" : "")">Following</button>
+        </div>
+    </div>
+
+    <div class="feed-container" @onscroll="OnScroll" @ref="feedContainer">
+        @if (isLoading && !feedItems.Any())
+        {
+            <!-- Initial loading skeleton -->
+            @for (int i = 0; i < 5; i++)
+            {
+                <div class="activity-item skeleton">
+                    <div class="skeleton-avatar"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton-line skeleton-line-title"></div>
+                        <div class="skeleton-line skeleton-line-subtitle"></div>
+                        <div class="skeleton-line skeleton-line-text"></div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            @foreach (var item in feedItems)
+            {
+                @if (item.Type == FeedItemType.Advertisement)
+                {
+                    <div class="activity-item ad-item" @onclick="() => OnAdClick.InvokeAsync(item)">
+                        <div class="ad-header">
+                            <span class="ad-label">Sponsored</span>
+                        </div>
+                        <div class="ad-content">
+                            <img src="@item.ImageUrl" alt="@item.Title" class="ad-image" />
+                            <div class="ad-info">
+                                <h3 class="ad-title">@item.Title</h3>
+                                <p class="ad-description">@item.Description</p>
+                                <button class="ad-cta">@item.CallToAction</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="activity-item" @onclick="() => OnItemClick.InvokeAsync(item)">
+                        <div class="user-avatar">
+                            <img src="@item.UserAvatarUrl" alt="@item.UserName" class="avatar-image" />
+                            @if (item.IsOnline)
+                            {
+                                <div class="online-indicator"></div>
+                            }
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-header">
+                                <span class="user-name">@item.UserName</span>
+                                <span class="activity-action">@FeedUtilities.GetActionText(item.Type)</span>
+                                <span class="book-title">@item.BookTitle</span>
+                                <span class="time-ago">@FeedUtilities.GetTimeAgo(item.CreatedAt)</span>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(item.Description))
+                            {
+                                <p class="activity-description">@item.Description</p>
+                            }
+
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <div class="activity-image">
+                                    <img src="@item.ImageUrl" alt="Activity image" class="content-image" />
+                                </div>
+                            }
+
+                            <div class="activity-stats">
+                                <button class="stat-button @(item.IsLiked ? "liked" : "")" @onclick:stopPropagation="true" @onclick="() => ToggleLike(item)">
+                                    <span class="stat-icon">@(item.IsLiked ? "❤️" : "🤍")</span>
+                                    <span class="stat-count">@FeedUtilities.FormatCount(item.LikesCount)</span>
+                                </button>
+                                <button class="stat-button" @onclick:stopPropagation="true" @onclick="() => OnCommentClick.InvokeAsync(item)">
+                                    <span class="stat-icon">💬</span>
+                                    <span class="stat-count">@FeedUtilities.FormatCount(item.CommentsCount)</span>
+                                </button>
+                                <button class="stat-button" @onclick:stopPropagation="true" @onclick="() => OnShareClick.InvokeAsync(item)">
+                                    <span class="stat-icon">📤</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+
+        @if (isLoadingMore)
+        {
+            <div class="loading-more">
+                <div class="loading-spinner"></div>
+                <span>Loading more...</span>
+            </div>
+        }
+
+        @if (hasReachedEnd && feedItems.Any())
+        {
+            <div class="end-message">
+                <span>🎉 You're all caught up!</span>
+            </div>
+        }
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public EventCallback<FeedItem> OnItemClick { get; set; }
+    [Parameter] public EventCallback<FeedItem> OnCommentClick { get; set; }
+    [Parameter] public EventCallback<FeedItem> OnShareClick { get; set; }
+    [Parameter] public EventCallback<FeedItem> OnAdClick { get; set; }
+
+    private List<FeedItem> feedItems = new();
+    private bool isLoading = true;
+    private bool isLoadingMore = false;
+    private bool hasReachedEnd = false;
+    private string currentFilter = "all";
+    private ElementReference feedContainer;
+    private int currentPage = 1;
+    private const int itemsPerPage = 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInitialFeed();
+    }
+
+    private async Task LoadInitialFeed()
+    {
+        isLoading = true;
+        await Task.Delay(1000); // Simulate API call
+
+        feedItems = SampleDataService.GenerateFeedItems(currentPage, itemsPerPage);
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadMoreItems()
+    {
+        if (isLoadingMore || hasReachedEnd) return;
+
+        isLoadingMore = true;
+        StateHasChanged();
+
+        await Task.Delay(500); // Simulate API call
+
+        var newItems = SampleDataService.GenerateFeedItems(++currentPage, itemsPerPage);
+        if (newItems.Any())
+        {
+            feedItems.AddRange(newItems);
+        }
+        else
+        {
+            hasReachedEnd = true;
+        }
+
+        isLoadingMore = false;
+        StateHasChanged();
+    }
+
+    private async Task ChangeFilter(string filter)
+    {
+        if (currentFilter == filter) return;
+
+        currentFilter = filter;
+        currentPage = 1;
+        hasReachedEnd = false;
+
+        await LoadInitialFeed();
+    }
+
+    private async Task OnScroll()
+    {
+        // if (feedContainer.Context is null) return;
+
+        // var scrollTop = await feedContainer.GetProperty("scrollTop");
+        // var scrollHeight = await feedContainer.GetProperty("scrollHeight");
+        // var clientHeight = await feedContainer.GetProperty("clientHeight");
+
+        // var scrollPosition = scrollTop.GetDouble();
+        // var maxScroll = scrollHeight.GetDouble() - clientHeight.GetDouble();
+
+        // if (scrollPosition >= maxScroll - 200 && !isLoadingMore && !hasReachedEnd)
+        // {
+        //     await LoadMoreItems();
+        // }
+    }
+
+    private async Task ToggleLike(FeedItem item)
+    {
+        item.IsLiked = !item.IsLiked;
+        item.LikesCount += item.IsLiked ? 1 : -1;
+        StateHasChanged();
+    }
+}

@@ -1,0 +1,208 @@
+﻿@namespace LitJournal.MobileApp.Components.Pages.Shared
+@using LitJournal.MobileApp.Models
+
+<div class="feed-page">
+    <!-- Feed Content -->
+    <div class="feed-content">
+        <!-- Trending Books Carousel -->
+        <TrendingBooksCarousel 
+            TrendingBooks="@trendingBooks"
+            OnBookClick="HandleBookClick"
+            OnSeeAllClick="HandleSeeAllTrending" />
+
+        <!-- Activity Feed with Infinite Scroll -->
+        <ActivityFeed 
+            OnItemClick="HandleActivityClick"
+            OnCommentClick="HandleComment"
+            OnShareClick="HandleShare"
+            OnAdClick="HandleAdClick" />
+    </div>
+
+    <!-- Floating Action Button for Quick Add -->
+    <button class="fab" @onclick="HandleQuickAdd" title="Quick Add Book">
+        <svg class="fab-icon" viewBox="0 0 24 24" fill="none">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+    </button>
+
+    <!-- Toast Notifications -->
+    @if (showToast)
+    {
+        <div class="toast @toastType" @onclick="HideToast">
+            <span class="toast-message">@toastMessage</span>
+            <button class="toast-close" @onclick="HideToast">×</button>
+        </div>
+    }
+</div>
+
+@code {
+    // State management
+    private int notificationCount = 3;
+    private List<TrendingBook> trendingBooks = new();
+    private bool showStories = true;
+    private bool showToast = false;
+    private string toastMessage = "";
+    private string toastType = "";
+    private List<Story> recentStories = new();
+
+    // Lifecycle
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFeedData();
+    }
+
+    private async Task LoadFeedData()
+    {
+        // Simulate loading data
+        await Task.Delay(500);
+        
+        // Initialize trending books (this would come from your API)
+        trendingBooks = new List<TrendingBook>
+        {
+            new() { 
+                Id = "1", Title = "The Seven Husbands of Evelyn Hugo", Author = "Taylor Jenkins Reid", 
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1618151455i/32620332.jpg",
+                Rating = 4.6, ReadersCount = 890000, Genre = "Romance", TrendingRank = 1
+            },
+            new() { 
+                Id = "2", Title = "Project Hail Mary", Author = "Andy Weir", 
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1597695864i/54493401.jpg",
+                Rating = 4.5, ReadersCount = 456000, Genre = "Sci-Fi", TrendingRank = 2
+            },
+            new() { 
+                Id = "3", Title = "Where the Crawdads Sing", Author = "Delia Owens",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1555781681i/36809135.jpg",
+                Rating = 4.8, ReadersCount = 1200000, Genre = "Mystery", TrendingRank = 3
+            },
+            new() { 
+                Id = "4", Title = "Dune", Author = "Frank Herbert",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1447794446i/234225.jpg",
+                Rating = 4.7, ReadersCount = 980000, Genre = "Sci-Fi", TrendingRank = 4
+            },
+            new() { 
+                Id = "5", Title = "The Midnight Library", Author = "Matt Haig",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1607272871i/52578297.jpg",
+                Rating = 4.4, ReadersCount = 670000, Genre = "Fantasy", TrendingRank = 5
+            },
+            new() { 
+                Id = "6", Title = "Atomic Habits", Author = "James Clear",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1535115320i/40121378.jpg",
+                Rating = 4.7, ReadersCount = 1150000, Genre = "Self-Help", TrendingRank = 6
+            },
+            new() { 
+                Id = "7", Title = "The Invisible Life of Addie LaRue", Author = "V.E. Schwab",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1595522717i/52659271.jpg",
+                Rating = 4.6, ReadersCount = 530000, Genre = "Fantasy", TrendingRank = 7
+            },
+            new() { 
+                Id = "8", Title = "The Last Thing He Told Me", Author = "Laura Dave",
+                CoverUrl = "https://images-na.ssl-images-amazon.com/images/S/compressed.photo.goodreads.com/books/1618085573i/56519864.jpg",
+                Rating = 4.3, ReadersCount = 410000, Genre = "Thriller", TrendingRank = 8
+            }
+        };
+
+        // Initialize stories
+        recentStories = new List<Story>
+        {
+            new() { Id = "1", UserName = "Emma", UserAvatar = "https://images.unsplash.com/photo-1494790108755-2616b69e9c06?w=100&h=100&fit=crop&crop=face", IsViewed = false },
+            new() { Id = "2", UserName = "Alex", UserAvatar = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face", IsViewed = true },
+            new() { Id = "3", UserName = "Sarah", UserAvatar = "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face", IsViewed = false }
+        };
+    }
+
+    // Event handlers
+    private async Task HandleSearch()
+    {
+        ShowToast("Search functionality coming soon!", "info");
+    }
+
+    private async Task HandleNotifications()
+    {
+        notificationCount = 0;
+        StateHasChanged();
+        ShowToast("Opening notifications...", "success");
+    }
+
+    private async Task HandleAddNew()
+    {
+        ShowToast("Quick add menu opened!", "info");
+    }
+
+    private async Task HandleBookClick(TrendingBook book)
+    {
+        ShowToast($"Opening '{book.Title}'...", "success");
+        // Navigate to book details page
+        // await Shell.Current.GoToAsync($"/book/{book.Id}");
+    }
+
+    private async Task HandleSeeAllTrending()
+    {
+        ShowToast("Loading all trending books...", "info");
+        // Navigate to trending books page
+    }
+
+    private async Task HandleActivityClick(FeedItem item)
+    {
+        ShowToast($"Opening activity: {item.UserName}'s action", "info");
+    }
+
+    private async Task HandleComment(FeedItem item)
+    {
+        ShowToast("Comments section opened!", "info");
+    }
+
+    private async Task HandleShare(FeedItem item)
+    {
+        ShowToast("Share options opened!", "info");
+    }
+
+    private async Task HandleAdClick(FeedItem ad)
+    {
+        ShowToast($"Opening ad: {ad.Title}", "info");
+    }
+
+    private async Task HandleQuickAdd()
+    {
+        ShowToast("Quick add book dialog opened!", "success");
+    }
+
+    private async Task HandleAddStory()
+    {
+        ShowToast("Add your reading story!", "info");
+    }
+
+    private async Task HandleStoryClick(Story story)
+    {
+        story.IsViewed = true;
+        ShowToast($"Viewing {story.UserName}'s story...", "info");
+        StateHasChanged();
+    }
+
+    // Toast management
+    private void ShowToast(string message, string type = "info")
+    {
+        toastMessage = message;
+        toastType = type;
+        showToast = true;
+        StateHasChanged();
+        
+        // Auto-hide after 3 seconds
+        Task.Delay(3000).ContinueWith(_ => HideToast());
+    }
+
+    private void HideToast()
+    {
+        showToast = false;
+        StateHasChanged();
+    }
+
+    // Supporting classes
+    private class Story
+    {
+        public string Id { get; set; } = "";
+        public string UserName { get; set; } = "";
+        public string UserAvatar { get; set; } = "";
+        public bool IsViewed { get; set; }
+    }
+}
